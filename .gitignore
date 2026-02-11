@@ -1,0 +1,39 @@
+# Python caches/build
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.egg-info/
+build/
+dist/
+wheels/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Runtime outputs (training)
+logs/
+artifacts/
+
+# Local datasets/checkpoints
+data/
+
+# Optional: keep folder structure
+!data/.gitkeep
+!logs/.gitkeep
+!artifacts/.gitkeep
