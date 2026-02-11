@@ -217,3 +217,5 @@ If you add a new model family:
 ---
 
 This repository is meant to be a living progression from foundational embedding ideas to current best-practice systems.
+
+In case of questions/comments/suggestions please drop me an email at: shekharp.erau@gmail.com
