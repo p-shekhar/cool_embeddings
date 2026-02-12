@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import argparse
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
 
 
 def build_parser() -> argparse.ArgumentParser:

@@ -98,6 +98,15 @@ Override config from CLI:
 python3 main.py train-nplm --epochs 30 --batch-size 128 --lr 5e-4
 ```
 
+Early stopping and regularization controls:
+
+```bash
+python3 main.py train-nplm \
+  --weight-decay 1e-4 \
+  --early-stopping-patience 3 \
+  --early-stopping-min-delta 0.0
+```
+
 Choose device explicitly:
 
 ```bash
@@ -152,6 +161,12 @@ Timestamping behavior:
 
 This prevents overwriting outputs across runs.
 
+Early-stopping behavior:
+
+1. Training can stop before `epochs` if validation loss does not improve.
+2. Default patience is `3` epochs.
+3. Set `--early-stopping-patience 0` to disable early stopping.
+
 ## Data Providers (Extensible)
 
 Current dataset options:
@@ -185,7 +200,14 @@ For this baseline model, a good starting point is:
 
 1. `epochs: 20-30`
 2. monitor validation perplexity
-3. keep best checkpoint by validation loss
+3. `weight_decay: 1e-4`
+4. keep best checkpoint by validation loss
+
+Current config defaults (`configs/config_nplm.yaml`) include:
+
+1. `weight_decay: 1e-4`
+2. `early_stopping_patience: 3`
+3. `early_stopping_min_delta: 0.0`
 
 ## Known Notes
 

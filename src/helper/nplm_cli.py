@@ -66,7 +66,13 @@ def config_defaults(config: dict[str, object]) -> dict[str, object]:
         "epochs": int(optim_cfg.get("epochs", config.get("epochs", 10))),
         "batch_size": int(optim_cfg.get("batch_size", config.get("batch_size", 256))),
         "lr": float(optim_cfg.get("lr", config.get("lr", 1e-3))),
-        "weight_decay": float(optim_cfg.get("weight_decay", config.get("weight_decay", 0.0))),
+        "weight_decay": float(optim_cfg.get("weight_decay", config.get("weight_decay", 1e-4))),
+        "early_stopping_patience": int(
+            optim_cfg.get("early_stopping_patience", config.get("early_stopping_patience", 3))
+        ),
+        "early_stopping_min_delta": float(
+            optim_cfg.get("early_stopping_min_delta", config.get("early_stopping_min_delta", 0.0))
+        ),
         "num_workers": int(optim_cfg.get("num_workers", config.get("num_workers", 0))),
         "seed": int(optim_cfg.get("seed", config.get("seed", 42))),
         "device": str(runtime_cfg.get("device", config.get("device", "auto"))),
@@ -112,7 +118,19 @@ def add_cli_args(parser: argparse.ArgumentParser, defaults: dict[str, object] | 
     parser.add_argument("--epochs", type=int, default=defaults.get("epochs", 10))
     parser.add_argument("--batch-size", type=int, default=defaults.get("batch_size", 256))
     parser.add_argument("--lr", type=float, default=defaults.get("lr", 1e-3))
-    parser.add_argument("--weight-decay", type=float, default=defaults.get("weight_decay", 0.0))
+    parser.add_argument("--weight-decay", type=float, default=defaults.get("weight_decay", 1e-4))
+    parser.add_argument(
+        "--early-stopping-patience",
+        type=int,
+        default=defaults.get("early_stopping_patience", 3),
+        help="Stop training if validation loss does not improve for N epochs (0 disables).",
+    )
+    parser.add_argument(
+        "--early-stopping-min-delta",
+        type=float,
+        default=defaults.get("early_stopping_min_delta", 0.0),
+        help="Minimum validation loss improvement to count as progress.",
+    )
     parser.add_argument("--num-workers", type=int, default=defaults.get("num_workers", 0))
     parser.add_argument("--seed", type=int, default=defaults.get("seed", 42))
     parser.add_argument("--device", default=defaults.get("device", "auto"), choices=("auto", "cpu", "cuda"))

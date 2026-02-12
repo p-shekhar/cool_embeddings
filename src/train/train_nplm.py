@@ -105,6 +105,8 @@ def save_checkpoint(
             "batch_size": args.batch_size,
             "lr": args.lr,
             "weight_decay": args.weight_decay,
+            "early_stopping_patience": args.early_stopping_patience,
+            "early_stopping_min_delta": args.early_stopping_min_delta,
             "seed": args.seed,
         },
         "metrics": {
@@ -208,6 +210,7 @@ def run(args: object) -> int:
 
     best_valid = Metrics(loss=float("inf"), perplexity=float("inf"))
     best_state_dict: dict[str, Tensor] | None = None
+    epochs_without_improvement = 0
     for epoch in range(1, args.epochs + 1):
         train_metrics = trainer.train_epoch(dataloaders["train"])
         valid_metrics = trainer.evaluate(dataloaders["valid"])
@@ -216,11 +219,23 @@ def run(args: object) -> int:
             f"train_loss={train_metrics.loss:.4f} train_ppl={train_metrics.perplexity:.2f} "
             f"valid_loss={valid_metrics.loss:.4f} valid_ppl={valid_metrics.perplexity:.2f}"
         )
-        if valid_metrics.loss < best_valid.loss:
+        if valid_metrics.loss < (best_valid.loss - args.early_stopping_min_delta):
             best_valid = valid_metrics
             best_state_dict = {
                 key: value.detach().cpu().clone() for key, value in model.state_dict().items()
             }
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+            if args.early_stopping_patience > 0 and (
+                epochs_without_improvement >= args.early_stopping_patience
+            ):
+                print(
+                    "[early-stop] "
+                    f"no validation improvement for {epochs_without_improvement} epoch(s); "
+                    f"patience={args.early_stopping_patience}"
+                )
+                break
 
     if best_state_dict is not None:
         model.load_state_dict(best_state_dict)
