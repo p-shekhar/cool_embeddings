@@ -22,6 +22,19 @@ def build_parser() -> argparse.ArgumentParser:
         dest="train_help",
         help="Show train-nplm help message.",
     )
+
+    use_parser = subparsers.add_parser(
+        "use-nplm",
+        add_help=False,
+        help="Use a trained NPLM checkpoint for prediction/generation.",
+    )
+    use_parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        dest="use_help",
+        help="Show use-nplm help message.",
+    )
     return parser
 
 
@@ -35,6 +48,12 @@ def main(argv: list[str] | None = None) -> int:
         if args.train_help:
             return train_nplm.main(["--help"])
         return train_nplm.main(remaining)
+    if args.command == "use-nplm":
+        from scripts import use_nplm
+
+        if args.use_help:
+            return use_nplm.main(["--help"])
+        return use_nplm.main(remaining)
     parser.error(f"Unknown command: {args.command}")
     return 2
 
