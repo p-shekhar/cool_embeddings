@@ -18,18 +18,25 @@ Implemented now:
 
 1. NPLM in PyTorch (`src/models/nplm.py`)
 2. CBOW in PyTorch (`src/models/cbow.py`)
-3. PTB downloader
-4. Config-driven training with CLI overrides
-5. Per-run logging
-6. Timestamped artifacts to avoid overwrite
-7. Per-epoch metric history saved for train/valid loss and perplexity
+3. CBOW negative-sampling training pipeline
+4. Skip-gram in PyTorch (`src/models/skipgram.py`)
+5. Skip-gram negative-sampling training pipeline
+6. PTB downloader
+7. Config-driven training with CLI overrides
+8. Per-run logging
+9. Timestamped artifacts to avoid overwrite
+10. Per-epoch metric history saved for train/valid loss and perplexity
 
 ## Implemented CLI Surface
 
 1. `train-nplm`: train feedforward language model
 2. `use-nplm`: LM inference + embedding inspection/similarity/analogy/plots/export + training-curve plots
 3. `train-cbow`: train CBOW embedding model
-4. `use-cbow`: embedding inspection/similarity/analogy/plots/export + training-curve plots
+4. `train-cbow-negsamp`: train CBOW with negative sampling
+5. `use-cbow`: embedding inspection/similarity/analogy/plots/export + training-curve plots
+6. `train-skipgram`: train skip-gram with full softmax objective
+7. `train-skipgram-negsamp`: train skip-gram with negative sampling
+8. `use-skipgram`: embedding inspection/similarity/analogy/plots/export + training-curve plots
 
 ## Notes
 
@@ -41,10 +48,9 @@ Implemented now:
 
 Planned additions:
 
-1. Skip-gram training pipeline
-2. GloVe-style co-occurrence factorization
-3. FastText-style subword embeddings
-4. LSTM/Transformer LM embeddings
-5. Sentence embedding objectives (contrastive/triplet/dual-encoder)
-6. Evaluation suite (word similarity, retrieval, transfer)
-7. Unified experiment tracking and reproducibility tooling
+1. GloVe-style co-occurrence factorization
+2. FastText-style subword embeddings
+3. LSTM/Transformer LM embeddings
+4. Sentence embedding objectives (contrastive/triplet/dual-encoder)
+5. Evaluation suite (word similarity, retrieval, transfer)
+6. Unified experiment tracking and reproducibility tooling

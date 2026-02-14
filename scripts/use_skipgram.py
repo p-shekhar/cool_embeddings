@@ -9,19 +9,25 @@ from pathlib import Path
 
 import torch
 
-# Ensure repo-root imports work when invoked as "python scripts/use_cbow.py".
+# Ensure repo-root imports work when invoked as "python scripts/use_skipgram.py".
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.models.cbow import ContinuousBagOfWords
+from src.models.skipgram import SkipGram
+
+
+def _is_skipgram_checkpoint_path(path: Path) -> bool:
+    return any("skipgram" in part for part in path.parts)
 
 
 def _find_latest_checkpoint(artifacts_dir: Path) -> Path:
-    candidates = sorted(artifacts_dir.rglob("best_model_*.pt"))
+    all_candidates = sorted(artifacts_dir.rglob("best_model_*.pt"))
+    candidates = [p for p in all_candidates if _is_skipgram_checkpoint_path(p)]
     if not candidates:
         raise FileNotFoundError(
-            f"No checkpoint files matching 'best_model_*.pt' found under: {artifacts_dir}"
+            "No skip-gram checkpoint files matching 'best_model_*.pt' "
+            f"found under: {artifacts_dir}"
         )
     return candidates[-1]
 
@@ -44,22 +50,35 @@ def _load_model_payload(checkpoint_path: Path, device: torch.device) -> dict[str
     missing = [key for key in required if key not in payload]
     if missing:
         raise ValueError(f"Checkpoint is missing required keys: {missing}")
+
+    model_config = payload["model_config"]
+    if not isinstance(model_config, dict):
+        raise ValueError("checkpoint['model_config'] must be a mapping")
+    model_type = str(model_config.get("model_type", "skipgram"))
+    if "skipgram" not in model_type:
+        raise ValueError(
+            "Checkpoint does not look like skip-gram. "
+            f"model_type={model_type!r} checkpoint={checkpoint_path}"
+        )
     return payload
 
 
 def _default_plot_dir_for_model_type(model_type: str) -> Path:
     if "negsamp" in model_type:
-        return Path("artifacts/cbow_negsamp/plots")
-    return Path("artifacts/cbow/plots")
+        return Path("artifacts/skipgram_negsamp/plots")
+    return Path("artifacts/skipgram/plots")
 
 
-def _build_model(payload: dict[str, object], device: torch.device) -> ContinuousBagOfWords:
+def _build_model(payload: dict[str, object], device: torch.device) -> SkipGram:
     model_config = payload["model_config"]
     if not isinstance(model_config, dict):
         raise ValueError("checkpoint['model_config'] must be a mapping")
-    model = ContinuousBagOfWords(
+
+    if "vocab_size" not in model_config or "embedding_dim" not in model_config:
+        raise ValueError("Skip-gram checkpoint model_config must contain vocab_size and embedding_dim")
+
+    model = SkipGram(
         vocab_size=int(model_config["vocab_size"]),
-        context_size=int(model_config["context_size"]),
         embedding_dim=int(model_config["embedding_dim"]),
     ).to(device)
     model.load_state_dict(payload["model_state_dict"])
@@ -214,7 +233,7 @@ def _plot_embeddings_pca(
     ax.scatter(x, y, s=24, alpha=0.9)
     for token, x_val, y_val in zip(labels, x, y):
         ax.annotate(token, (x_val, y_val), xytext=(3, 3), textcoords="offset points", fontsize=8)
-    ax.set_title("CBOW Embeddings: PCA (2D)")
+    ax.set_title("Skip-gram Embeddings: PCA (2D)")
     ax.set_xlabel("PC1")
     ax.set_ylabel("PC2")
     ax.grid(True, alpha=0.2)
@@ -243,7 +262,7 @@ def _plot_embeddings_distance_matrix(
     fig, ax = plt.subplots(figsize=(10, 8))
     image = ax.imshow(dist, interpolation="nearest")
     fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04, label="L2 distance")
-    ax.set_title("CBOW Token Embedding Distance Matrix")
+    ax.set_title("Skip-gram Token Embedding Distance Matrix")
     ax.set_xlabel("Token")
     ax.set_ylabel("Token")
 
@@ -323,19 +342,19 @@ def _plot_training_curves(history: list[dict[str, float | int]], output_path: Pa
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Use a trained CBOW checkpoint for embedding queries and plots."
+        description="Use a trained Skip-gram checkpoint for embedding queries and plots."
     )
     parser.add_argument(
         "--checkpoint",
         type=Path,
         default=None,
-        help="Path to checkpoint .pt file. If omitted, uses latest best_model_*.pt under --artifacts-dir.",
+        help="Path to checkpoint .pt file. If omitted, uses latest skip-gram best_model_*.pt under --artifacts-dir.",
     )
     parser.add_argument(
         "--artifacts-dir",
         type=Path,
-        default=Path("artifacts/cbow"),
-        help="Root directory for automatic checkpoint discovery (default: artifacts/cbow).",
+        default=Path("artifacts"),
+        help="Root directory for automatic checkpoint discovery (default: artifacts).",
     )
     parser.add_argument("--token", type=str, default=None, help="Show embedding summary for a token.")
     parser.add_argument(
@@ -364,7 +383,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Word analogy query: A - B + C, return top-k nearest tokens.",
     )
-    parser.add_argument("--top-k", type=int, default=10, help="Top-k for --similar results.")
+    parser.add_argument("--top-k", type=int, default=10, help="Top-k for --similar/--analogy results.")
     parser.add_argument(
         "--no-unk",
         action="store_true",
@@ -455,7 +474,7 @@ def main(argv: list[str] | None = None) -> int:
     model_config = payload["model_config"]
     if not isinstance(model_config, dict):
         raise ValueError("checkpoint['model_config'] must be a mapping")
-    model_type = str(model_config.get("model_type", "cbow"))
+    model_type = str(model_config.get("model_type", "skipgram"))
     plot_dir = args.plot_dir or _default_plot_dir_for_model_type(model_type)
     model = _build_model(payload, device=device)
     token_to_id, id_to_token, unk_id = _prepare_vocab(payload)

@@ -1,0 +1,33 @@
+data:
+  dataset: ptb
+  data_dir: data/ptb
+  train_file: data/ptb/ptb.train.txt
+  valid_file: data/ptb/ptb.valid.txt
+  test_file: data/ptb/ptb.test.txt
+
+model:
+  context_size: 2
+  embedding_dim: 128
+
+optimization:
+  epochs: 20
+  batch_size: 256
+  lr: 0.001
+  weight_decay: 0.0001
+  num_negatives: 10
+  negative_sampling_power: 0.75
+  early_stopping_patience: 3
+  early_stopping_min_delta: 0.0
+  num_workers: 0
+  seed: 42
+
+runtime:
+  device: auto
+
+output:
+  save_path: artifacts/skipgram_negsamp/best_model.pt
+  metrics_path: artifacts/skipgram_negsamp/metrics.json
+
+logging:
+  log_dir: logs
+  log_file: null
