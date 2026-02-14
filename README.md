@@ -7,6 +7,7 @@ Current implemented families:
 1. Bengio-style Neural Probabilistic Language Model (NPLM)
 2. Continuous Bag-of-Words (CBOW, full softmax and negative-sampling variants)
 3. Skip-gram (full softmax and negative-sampling variants)
+4. Next to be added: GloVe and FastText
 
 ## Quickstart
 
