@@ -49,8 +49,8 @@ uv run python main.py use-cbow --help
 
 ## Docs
 
-1. Detailed CLI usage and examples: `docs/cli.md`
-2. Project direction and roadmap: `docs/roadmap.md`
+1. Detailed CLI usage and examples: [`docs/cli.md`](docs/cli.md)
+2. Project direction and roadmap: [`docs/roadmap.md`](docs/roadmap.md)
 
 ## Repository Layout
 
