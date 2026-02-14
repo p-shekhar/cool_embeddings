@@ -7,7 +7,7 @@ data:
 
 model:
   context_size: 4
-  embedding_dim: 128
+  embedding_dim: 1000
   hidden_dim: 256
   direct_connection: true
 

@@ -22,13 +22,14 @@ Implemented now:
 4. Config-driven training with CLI overrides
 5. Per-run logging
 6. Timestamped artifacts to avoid overwrite
+7. Per-epoch metric history saved for train/valid loss and perplexity
 
 ## Implemented CLI Surface
 
 1. `train-nplm`: train feedforward language model
-2. `use-nplm`: LM inference + embedding inspection/similarity/analogy/plots/export
+2. `use-nplm`: LM inference + embedding inspection/similarity/analogy/plots/export + training-curve plots
 3. `train-cbow`: train CBOW embedding model
-4. `use-cbow`: embedding inspection/similarity/analogy/plots/export
+4. `use-cbow`: embedding inspection/similarity/analogy/plots/export + training-curve plots
 
 ## Notes
 

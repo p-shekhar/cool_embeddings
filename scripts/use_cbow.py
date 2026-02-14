@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -256,6 +257,64 @@ def _plot_embeddings_distance_matrix(
     plt.close(fig)
 
 
+def _default_metrics_path(checkpoint_path: Path) -> Path:
+    stem = checkpoint_path.stem
+    if stem.startswith("best_model_"):
+        suffix = stem.removeprefix("best_model_")
+        return checkpoint_path.with_name(f"metrics_{suffix}.json")
+    return checkpoint_path.with_name("metrics.json")
+
+
+def _load_epoch_history(metrics_path: Path) -> list[dict[str, float | int]]:
+    if not metrics_path.exists():
+        raise FileNotFoundError(f"Metrics file not found: {metrics_path}")
+    payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+    history = payload.get("epoch_history")
+    if not isinstance(history, list) or not history:
+        raise ValueError(
+            "Metrics file does not contain non-empty 'epoch_history'. "
+            "Retrain using updated trainer to generate it."
+        )
+    return history
+
+
+def _plot_training_curves(history: list[dict[str, float | int]], output_path: Path) -> None:
+    os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    epochs = [int(item["epoch"]) for item in history]
+    train_loss = [float(item["train_loss"]) for item in history]
+    valid_loss = [float(item["valid_loss"]) for item in history]
+    train_ppl = [float(item["train_ppl"]) for item in history]
+    valid_ppl = [float(item["valid_ppl"]) for item in history]
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    axes[0].plot(epochs, train_loss, label="train_loss")
+    axes[0].plot(epochs, valid_loss, label="valid_loss")
+    axes[0].set_title("Loss Curves")
+    axes[0].set_xlabel("Epoch")
+    axes[0].set_ylabel("Loss")
+    axes[0].grid(True, alpha=0.25)
+    axes[0].legend()
+
+    axes[1].plot(epochs, train_ppl, label="train_ppl")
+    axes[1].plot(epochs, valid_ppl, label="valid_ppl")
+    axes[1].set_title("Perplexity Curves")
+    axes[1].set_xlabel("Epoch")
+    axes[1].set_ylabel("Perplexity")
+    axes[1].grid(True, alpha=0.25)
+    axes[1].legend()
+
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=200)
+    plt.close(fig)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Use a trained CBOW checkpoint for embedding queries and plots."
@@ -335,6 +394,23 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional .pt path to export full embedding table payload.",
     )
+    parser.add_argument(
+        "--plot-training-curves",
+        action="store_true",
+        help="Plot train/valid loss and perplexity curves from metrics JSON.",
+    )
+    parser.add_argument(
+        "--metrics-path",
+        type=Path,
+        default=None,
+        help="Optional metrics JSON path (default inferred from checkpoint filename).",
+    )
+    parser.add_argument(
+        "--curves-path",
+        type=Path,
+        default=None,
+        help="Optional output image path for training curves.",
+    )
     return parser
 
 
@@ -357,12 +433,14 @@ def main(argv: list[str] | None = None) -> int:
             args.analogy is not None,
             args.plot_k > 0,
             args.export_embeddings is not None,
+            args.plot_training_curves,
         ]
     )
     if not has_operation:
         parser.error(
             "Provide at least one operation: "
-            "--token/--similar/--pair-sim/--analogy/--plot-k/--export-embeddings"
+            "--token/--similar/--pair-sim/--analogy/--plot-k/"
+            "--export-embeddings/--plot-training-curves"
         )
 
     checkpoint_path = args.checkpoint or _find_latest_checkpoint(args.artifacts_dir)
@@ -474,6 +552,17 @@ def main(argv: list[str] | None = None) -> int:
         torch.save(export_payload, args.export_embeddings)
         print("[export]")
         print(f"path={args.export_embeddings}")
+
+    if args.plot_training_curves:
+        metrics_path = args.metrics_path or _default_metrics_path(checkpoint_path)
+        curves_path = args.curves_path or (
+            args.plot_dir / f"{checkpoint_path.stem}_training_curves.png"
+        )
+        epoch_history = _load_epoch_history(metrics_path)
+        _plot_training_curves(epoch_history, curves_path)
+        print("[training-curves]")
+        print(f"metrics={metrics_path}")
+        print(f"plot={curves_path}")
 
     return 0
 

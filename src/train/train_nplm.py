@@ -83,6 +83,7 @@ def save_checkpoint(
     args: object,
     best_valid: Metrics,
     test_metrics: Metrics,
+    epoch_history: list[dict[str, float | int]],
 ) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -114,6 +115,7 @@ def save_checkpoint(
             "best_valid_ppl": best_valid.perplexity,
             "test_loss": test_metrics.loss,
             "test_ppl": test_metrics.perplexity,
+            "epoch_history": epoch_history,
         },
     }
     torch.save(payload, path)
@@ -211,9 +213,19 @@ def run(args: object) -> int:
     best_valid = Metrics(loss=float("inf"), perplexity=float("inf"))
     best_state_dict: dict[str, Tensor] | None = None
     epochs_without_improvement = 0
+    epoch_history: list[dict[str, float | int]] = []
     for epoch in range(1, args.epochs + 1):
         train_metrics = trainer.train_epoch(dataloaders["train"])
         valid_metrics = trainer.evaluate(dataloaders["valid"])
+        epoch_history.append(
+            {
+                "epoch": epoch,
+                "train_loss": train_metrics.loss,
+                "train_ppl": train_metrics.perplexity,
+                "valid_loss": valid_metrics.loss,
+                "valid_ppl": valid_metrics.perplexity,
+            }
+        )
         print(
             f"[epoch {epoch:03d}] "
             f"train_loss={train_metrics.loss:.4f} train_ppl={train_metrics.perplexity:.2f} "
@@ -249,6 +261,7 @@ def run(args: object) -> int:
         args=args,
         best_valid=best_valid,
         test_metrics=test_metrics,
+        epoch_history=epoch_history,
     )
     print(f"[saved] checkpoint={args.save_path}")
 
@@ -261,6 +274,7 @@ def run(args: object) -> int:
         "vocab_size": len(vocabulary),
         "context_size": args.context_size,
         "dataset": args.dataset,
+        "epoch_history": epoch_history,
     }
     args.metrics_path.write_text(json.dumps(metrics_payload, indent=2), encoding="utf-8")
     print(f"[saved] metrics={args.metrics_path}")

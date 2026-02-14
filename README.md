@@ -36,6 +36,8 @@ python3 main.py train-cbow
 ```bash
 python3 main.py use-nplm --prompt "the market is" --top-k 10 --device cpu
 python3 main.py use-cbow --similar market --top-k 10 --device cpu
+python3 main.py use-nplm --plot-training-curves --device cpu
+python3 main.py use-cbow --plot-training-curves --device cpu
 ```
 
 ## CLI Help
