@@ -2,8 +2,6 @@
 
 `cool-embeddings` is a learning-first, implementation-driven repository for embedding models.
 
-The current baseline is a Bengio (2003)-style Neural Probabilistic Language Model (NPLM), and the codebase is structured to evolve toward broader embedding systems.
-
 ## Goal
 
 Build one codebase that tracks the evolution of embeddings:
@@ -18,46 +16,31 @@ Build one codebase that tracks the evolution of embeddings:
 
 Implemented now:
 
-1. NPLM in PyTorch
-2. PTB downloader
-3. Config-driven training with CLI overrides
-4. Per-run logging
-5. Timestamped artifacts to avoid overwrite
+1. NPLM in PyTorch (`src/models/nplm.py`)
+2. CBOW in PyTorch (`src/models/cbow.py`)
+3. PTB downloader
+4. Config-driven training with CLI overrides
+5. Per-run logging
+6. Timestamped artifacts to avoid overwrite
 
-## Model Baseline
+## Implemented CLI Surface
 
-`src/models/nplm.py` implements feedforward NPLM:
+1. `train-nplm`: train feedforward language model
+2. `use-nplm`: LM inference + embedding inspection/similarity/analogy/plots/export
+3. `train-cbow`: train CBOW embedding model
+4. `use-cbow`: embedding inspection/similarity/analogy/plots/export
 
-1. Context token embeddings
-2. Concatenated context representation
-3. Hidden layer with `tanh`
-4. Vocabulary projection
-5. Optional direct context-to-output connection
-
-## Suggested PTB Baseline Defaults
-
-1. `epochs: 20-30`
-2. Monitor validation perplexity
-3. `weight_decay: 1e-4`
-4. Keep best checkpoint by validation loss
-
-Current defaults in `configs/config_nplm.yaml`:
-
-1. `weight_decay: 1e-4`
-2. `early_stopping_patience: 3`
-3. `early_stopping_min_delta: 0.0`
-
-## Known Notes
+## Notes
 
 1. The repo is intentionally early-stage.
-2. Structure is prepared for multiple embedding families, not only NPLM.
+2. Structure is prepared for multiple embedding families.
 3. Additional datasets and model families will be added incrementally.
 
 ## Roadmap
 
 Planned additions:
 
-1. Word2Vec (CBOW/Skip-gram) pipeline
+1. Skip-gram training pipeline
 2. GloVe-style co-occurrence factorization
 3. FastText-style subword embeddings
 4. LSTM/Transformer LM embeddings

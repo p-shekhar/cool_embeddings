@@ -22,6 +22,18 @@ def build_parser() -> argparse.ArgumentParser:
         dest="train_help",
         help="Show train-nplm help message.",
     )
+    train_cbow_parser = subparsers.add_parser(
+        "train-cbow",
+        add_help=False,
+        help="Train Continuous Bag-of-Words (CBOW) model.",
+    )
+    train_cbow_parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        dest="train_cbow_help",
+        help="Show train-cbow help message.",
+    )
 
     use_parser = subparsers.add_parser(
         "use-nplm",
@@ -34,6 +46,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         dest="use_help",
         help="Show use-nplm help message.",
+    )
+    use_cbow_parser = subparsers.add_parser(
+        "use-cbow",
+        add_help=False,
+        help="Use a trained CBOW checkpoint for embedding queries.",
+    )
+    use_cbow_parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        dest="use_cbow_help",
+        help="Show use-cbow help message.",
     )
     return parser
 
@@ -48,12 +72,24 @@ def main(argv: list[str] | None = None) -> int:
         if args.train_help:
             return train_nplm.main(["--help"])
         return train_nplm.main(remaining)
+    if args.command == "train-cbow":
+        from src.train import train_cbow
+
+        if args.train_cbow_help:
+            return train_cbow.main(["--help"])
+        return train_cbow.main(remaining)
     if args.command == "use-nplm":
         from scripts import use_nplm
 
         if args.use_help:
             return use_nplm.main(["--help"])
         return use_nplm.main(remaining)
+    if args.command == "use-cbow":
+        from scripts import use_cbow
+
+        if args.use_cbow_help:
+            return use_cbow.main(["--help"])
+        return use_cbow.main(remaining)
     parser.error(f"Unknown command: {args.command}")
     return 2
 
